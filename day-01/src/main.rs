@@ -6,23 +6,13 @@ extern crate aoc_util as util;
 fn main() {
     let input = util::get_input();
 
-    let masses = input
+    let fuel_sum: i32 = input
         .split("\n")
         .filter_map(|line_s| line_s.parse::<i32>().ok())
-        .collect();
-
-    let fuel = calc_fuel_requirement(masses);
-
-    println!("{}", fuel);
-}
-
-fn calc_fuel_requirement(masses: Vec<i32>) -> i32 {
-    let fuel_requirements = masses
-        .into_iter()
         .map(calc_fuel_for_mass)
-        .collect::<Vec<i32>>();
+        .sum();
 
-    fuel_requirements.iter().sum::<i32>()
+    println!("{}", fuel_sum);
 }
 
 fn calc_fuel_for_mass(mass: i32) -> i32 {
