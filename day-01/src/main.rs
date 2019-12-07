@@ -9,15 +9,27 @@ fn main() {
     let masses = input
         .split("\n")
         .filter_map(|line_s| line_s.parse::<i32>().ok())
+        .collect();
+
+    let fuel = calc_fuel_requirement(masses);
+
+    println!("{}", fuel);
+}
+
+fn calc_fuel_requirement(masses: Vec<i32>) -> i32 {
+    let fuel_requirements = masses
+        .into_iter()
+        .map(calc_fuel_for_mass)
         .collect::<Vec<i32>>();
 
-    let fuel_requirements = masses.into_iter().map(calc_fuel_for_mass);
-
-    let fuel_sum: i32 = fuel_requirements.sum();
-
-    println!("{}", fuel_sum);
+    fuel_requirements.iter().sum::<i32>()
 }
 
 fn calc_fuel_for_mass(mass: i32) -> i32 {
-    mass / 3 - 2
+    let fuel = mass / 3 - 2;
+    if fuel > 0 {
+        fuel + calc_fuel_for_mass(fuel)
+    } else {
+        0
+    }
 }
