@@ -11,13 +11,13 @@ fn main() {
         .filter_map(|line_s| line_s.parse::<i32>().ok())
         .collect::<Vec<i32>>();
 
-    let fuel_requirements = masses.into_iter().map(calcu_fuel_for_mass);
+    let fuel_requirements = masses.into_iter().map(calc_fuel_for_mass);
 
     let fuel_sum: i32 = fuel_requirements.sum();
 
     println!("{}", fuel_sum);
 }
 
-fn calcu_fuel_for_mass(mass: i32) -> i32 {
+fn calc_fuel_for_mass(mass: i32) -> i32 {
     mass / 3 - 2
 }
