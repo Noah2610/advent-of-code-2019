@@ -4,15 +4,16 @@
 extern crate aoc_util as util;
 
 fn main() {
-    let input = util::get_input();
+    println!("{}", calc_fuel());
+}
 
-    let fuel_sum: i32 = input
+fn calc_fuel() -> i32 {
+    let input = util::get_input();
+    input
         .split("\n")
         .filter_map(|line_s| line_s.parse::<i32>().ok())
         .map(calc_fuel_for_mass)
-        .sum();
-
-    println!("{}", fuel_sum);
+        .sum()
 }
 
 fn calc_fuel_for_mass(mass: i32) -> i32 {
@@ -22,4 +23,9 @@ fn calc_fuel_for_mass(mass: i32) -> i32 {
     } else {
         0
     }
+}
+
+#[test]
+fn test_correct_answer() {
+    assert_eq!(5182078, calc_fuel());
 }
