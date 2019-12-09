@@ -5,9 +5,14 @@ extern crate aoc_util as util;
 
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
+use std::fmt;
 
-type Id = usize;
-type Grid = HashMap<Pos, Point>;
+type Id = char;
+
+mod grid_chars {
+    pub const EMPTY: char = ' ';
+    pub const START: char = 'X';
+}
 
 fn main() -> Result<(), String> {
     let input = util::get_input();
@@ -21,21 +26,9 @@ fn main() -> Result<(), String> {
 
     circuit.gen_grid();
 
-    println!("{:#?}", &circuit.grid);
+    println!("{}", &circuit.grid);
 
     Ok(())
-}
-
-#[derive(PartialEq, Eq, Hash, Default, Clone, Debug)]
-struct Pos {
-    pub x: isize,
-    pub y: isize,
-}
-
-#[derive(Debug)]
-enum Point {
-    Empty,
-    Filled(Id),
 }
 
 #[derive(Default, Debug)]
@@ -55,35 +48,38 @@ impl Circuit {
     }
 
     pub fn gen_grid(&mut self) {
-        let mut grid: Grid = HashMap::new();
+        let mut grid: Grid = Grid::default();
 
         for (wire_id, wire) in self.wires.iter().enumerate() {
             let mut pos = Pos::default();
+            let wire_id = wire_id.to_string().chars().next().unwrap();
+
+            grid.0.insert(pos.clone(), Point::Start);
 
             for direction in wire.0.iter() {
                 match direction {
                     Direction::Up(n) => {
-                        for y in (1 ..= *n).into_iter() {
-                            pos.y -= y as isize;
-                            grid.insert(pos.clone(), Point::Filled(wire_id));
+                        for _ in (0 .. *n).into_iter() {
+                            pos.y -= 1 as isize;
+                            grid.0.insert(pos.clone(), Point::Filled(wire_id));
                         }
                     }
                     Direction::Down(n) => {
-                        for y in (1 ..= *n).into_iter() {
-                            pos.y += y as isize;
-                            grid.insert(pos.clone(), Point::Filled(wire_id));
+                        for _ in (0 .. *n).into_iter() {
+                            pos.y += 1 as isize;
+                            grid.0.insert(pos.clone(), Point::Filled(wire_id));
                         }
                     }
                     Direction::Left(n) => {
-                        for x in (1 ..= *n).into_iter() {
-                            pos.x -= x as isize;
-                            grid.insert(pos.clone(), Point::Filled(wire_id));
+                        for _ in (0 .. *n).into_iter() {
+                            pos.x -= 1 as isize;
+                            grid.0.insert(pos.clone(), Point::Filled(wire_id));
                         }
                     }
                     Direction::Right(n) => {
-                        for x in (1 ..= *n).into_iter() {
-                            pos.x += x as isize;
-                            grid.insert(pos.clone(), Point::Filled(wire_id));
+                        for _ in (0 .. *n).into_iter() {
+                            pos.x += 1 as isize;
+                            grid.0.insert(pos.clone(), Point::Filled(wire_id));
                         }
                     }
                 }
@@ -92,6 +88,72 @@ impl Circuit {
 
         self.grid = grid;
     }
+}
+
+#[derive(Default, Debug)]
+struct Grid(pub HashMap<Pos, Point>);
+
+impl fmt::Display for Grid {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let mut y_bounds = (0, 0);
+        let mut x_bounds = (0, 0);
+
+        for pos in self.0.keys() {
+            if pos.y < y_bounds.0 {
+                y_bounds.0 = pos.y;
+            } else if pos.y > y_bounds.1 {
+                y_bounds.1 = pos.y;
+            }
+            if pos.x < x_bounds.0 {
+                x_bounds.0 = pos.x;
+            } else if pos.x > x_bounds.1 {
+                x_bounds.1 = pos.x;
+            }
+        }
+
+        let mut string = String::new();
+
+        for y in y_bounds.0 ..= y_bounds.1 {
+            for x in x_bounds.0 ..= x_bounds.1 {
+                let pos = Pos::new(x, y);
+                // let point = self.0.get(&pos).expect(&format!(
+                //     "Grid should have Point at Pos (x: {}, y: {})",
+                //     pos.x, pos.y
+                // ));
+                if let Some(point) = self.0.get(&pos) {
+                    string.push(match point {
+                        Point::Empty => grid_chars::EMPTY,
+                        Point::Start => grid_chars::START,
+                        Point::Filled(id) => *id,
+                    });
+                } else {
+                    string.push(grid_chars::EMPTY);
+                }
+            }
+            string.push('\n');
+        }
+
+        write!(f, "{}", string)
+    }
+}
+
+#[derive(PartialEq, Eq, Hash, Default, Clone, Debug)]
+struct Pos {
+    pub x: isize,
+    pub y: isize,
+}
+
+impl Pos {
+    pub fn new(x: isize, y: isize) -> Self {
+        Self { x, y }
+    }
+}
+
+#[derive(Debug)]
+enum Point {
+    Empty,
+    Start,
+    Filled(Id),
 }
 
 #[derive(Debug)]
