@@ -2,6 +2,12 @@
 
 const INPUT_FILENAME: &str = "input.txt";
 
+/// Returns the content of the input file for the current day's puzzle as a String.
+/// The input file must be in the puzzle's crate root (next to the crate's `Cargo.toml` file)
+/// or in the directory of the compiled binary, with the name `input.txt`.
+/// If the program is run with `cargo run`, then it will check for the input file
+/// in the crate's root directory. If the compiled binary is executed directly,
+/// then it will check for the input file in the same directory as the executable.
 pub fn get_input() -> String {
     use std::env;
     use std::fs::File;
