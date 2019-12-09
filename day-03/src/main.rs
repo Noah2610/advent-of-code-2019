@@ -113,9 +113,6 @@ impl Grid {
     pub fn add(&mut self, pos: Pos, id: Id) {
         if let Some(existing_point) = self.points.get_mut(&pos) {
             match existing_point {
-                Point::Empty => {
-                    *existing_point = Point::Filled(id);
-                }
                 Point::Start => {
                     // Don't overwrite starting point, but also don't see it as an intersection.
                     // Not sure if this is the correct behaviour.
@@ -174,7 +171,6 @@ impl fmt::Display for Grid {
                 let pos = Pos::new(x, y);
                 if let Some(point) = self.get(&pos) {
                     string.push(match point {
-                        Point::Empty => grid_chars::EMPTY,
                         Point::Start => grid_chars::START,
                         Point::Filled(id) => *id,
                         Point::Intersection(_) => grid_chars::INTERSECTION,
@@ -215,7 +211,6 @@ impl fmt::Display for Pos {
 
 #[derive(Debug)]
 enum Point {
-    Empty,
     Start,
     Filled(Id),
     Intersection(Vec<Id>),
