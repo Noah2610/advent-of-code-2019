@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# shellcheck source=./util.sh
+_dir="$( dirname "$0" )"
+source "${_dir}/share.sh"
+unset _dir
+
+check "cargo"
+check "grep"
+check "sed"
+
+ROOT_CARGO_TOML="${ROOT}/Cargo.toml"
+check_file "$ROOT_CARGO_TOML"
+
+function new_day {
+    local day="$1"
+    local crate_name
+    crate_name="$( get_day_crate_name_from_args "$@" )"
+    shift
+
+    # Add crate's directory name to Cargo.toml's members list
+    sed -i 's/^]/    "'"${day}"'",\n]/' "$ROOT_CARGO_TOML"
+
+    # Create new crate
+    pushd "$ROOT" &> /dev/null || exit 1
+    cargo new --bin --name "$crate_name" "$day" "$@"
+    popd &> /dev/null || exit 1
+
+    # Change some stuff in the newly generated crate's Cargo.toml
+    local cargo_toml="${ROOT}/${day}/Cargo.toml"
+    check_file "$cargo_toml"
+    # Change version from "0.1.0" to "0.0.0"
+    sed -i 's/^version = ".\+"/version = "0.0.0"/' "$cargo_toml"
+    # Remove comment
+    # https://unix.stackexchange.com/a/152389
+    tr '\n' '\r' < "$cargo_toml" \
+        | sed 's/#.*\r\r//' \
+        | tr '\r' '\n' > "${cargo_toml}.tmp" \
+        && mv "${cargo_toml}.tmp" "$cargo_toml"
+    # Add aoc-util dependency
+    echo 'aoc-util = { path = "../util" }' >> "$cargo_toml"
+}
+
+new_day "$@"
