@@ -106,7 +106,6 @@ impl Circuit {
         let mut steps_to_intersections = Vec::<(Pos, usize)>::new();
 
         let mut steps = orig_steps;
-        // let mut steps = 0;
 
         loop {
             steps += 1;
