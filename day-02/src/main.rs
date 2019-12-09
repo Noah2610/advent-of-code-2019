@@ -10,14 +10,14 @@ fn main() {
 
     let mut opcodes = input
         .split(",")
-        .filter_map(|x| x.parse::<Num>().ok())
+        .filter_map(|x| x.trim().parse::<Num>().ok())
         .collect::<Vec<Num>>();
 
     // "[...] before running the program, replace position 1 with the value 12
     // and replace position 2 with the value 2."
     // Not sure why this needs to be done, but yeah.
-    opcodes.get_mut(1).map(|x| *x = 12);
-    opcodes.get_mut(2).map(|x| *x = 2);
+    // opcodes.get_mut(1).map(|x| *x = 12);
+    // opcodes.get_mut(2).map(|x| *x = 2);
 
     let program = Program::from(opcodes);
 
