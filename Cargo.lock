@@ -18,3 +18,10 @@ dependencies = [
  "aoc-util 0.0.0",
 ]
 
+[[package]]
+name = "aoc2019-day-03"
+version = "0.0.0"
+dependencies = [
+ "aoc-util 0.0.0",
+]
+
