@@ -8,22 +8,49 @@ type Num = usize;
 fn main() {
     let input = util::get_input();
 
-    let mut opcodes = input
+    let orig_opcodes = input
         .split(",")
         .filter_map(|x| x.trim().parse::<Num>().ok())
         .collect::<Vec<Num>>();
 
-    // "[...] before running the program, replace position 1 with the value 12
-    // and replace position 2 with the value 2."
-    // Not sure why this needs to be done, but yeah.
-    // opcodes.get_mut(1).map(|x| *x = 12);
-    // opcodes.get_mut(2).map(|x| *x = 2);
+    // Find inputs that will result in the value:
+    //     19690720
 
-    let program = Program::from(opcodes);
+    const INPUT_ONE_POS: Num = 1;
+    const INPUT_TWO_POS: Num = 2;
+    const INPUT_MAX: usize = 99;
+    const TARGET_RESULT: usize = 19690720;
+    let mut result = 0;
+    let mut input_one = 0;
+    let mut input_two = 0;
 
-    if let Some(first_opcode) = program.run() {
-        println!("{}", first_opcode);
+    while result != TARGET_RESULT {
+        let mut opcodes = orig_opcodes.clone();
+
+        opcodes.get_mut(INPUT_ONE_POS).map(|x| *x = input_one);
+        opcodes.get_mut(INPUT_TWO_POS).map(|x| *x = input_two);
+
+        let program = Program::from(opcodes);
+
+        result = program.run().unwrap();
+
+        // Increment inputs
+        if input_two < INPUT_MAX {
+            input_two += 1;
+        } else {
+            if input_one < INPUT_MAX {
+                input_one += 1;
+                input_two = 0;
+            } else {
+                panic!("No result found :(");
+            }
+        }
     }
+
+    println!(
+        "noun = {}\nverb = {}\nresult = {}",
+        input_one, input_two, result
+    );
 }
 
 #[derive(Debug)]
