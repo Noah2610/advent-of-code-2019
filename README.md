@@ -25,4 +25,10 @@ bin/new-day day-99
 ```
 This will generated a crate with the name `aoc2019-day-99` in a new `day-99/` directory.  
 
+---
+
+## License
+[MIT License][license]
+
 [aoc2019]: https://adventofcode.com/2019
+[license]: https://github.com/Noah2610/advent-of-code-2019/blob/master/LICENSE
