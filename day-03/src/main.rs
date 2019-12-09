@@ -6,7 +6,8 @@ extern crate aoc_util as util;
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 
-type Id = u32;
+type Id = usize;
+type Grid = HashMap<Pos, Point>;
 
 fn main() -> Result<(), String> {
     let input = util::get_input();
@@ -18,12 +19,14 @@ fn main() -> Result<(), String> {
         circuit = circuit.with_wire(input_line.to_string())?
     }
 
-    dbg!(&circuit);
+    circuit.gen_grid();
+
+    println!("{:#?}", &circuit.grid);
 
     Ok(())
 }
 
-#[derive(PartialEq, Eq, Hash, Debug)]
+#[derive(PartialEq, Eq, Hash, Default, Clone, Debug)]
 struct Pos {
     pub x: isize,
     pub y: isize,
@@ -37,7 +40,7 @@ enum Point {
 
 #[derive(Default, Debug)]
 struct Circuit {
-    grid:  HashMap<Pos, Point>,
+    grid:  Grid,
     wires: Vec<WirePath>,
 }
 
@@ -49,6 +52,45 @@ impl Circuit {
         let wire = try_into_wire.try_into()?;
         self.wires.push(wire);
         Ok(self)
+    }
+
+    pub fn gen_grid(&mut self) {
+        let mut grid: Grid = HashMap::new();
+
+        for (wire_id, wire) in self.wires.iter().enumerate() {
+            let mut pos = Pos::default();
+
+            for direction in wire.0.iter() {
+                match direction {
+                    Direction::Up(n) => {
+                        for y in (1 ..= *n).into_iter() {
+                            pos.y -= y as isize;
+                            grid.insert(pos.clone(), Point::Filled(wire_id));
+                        }
+                    }
+                    Direction::Down(n) => {
+                        for y in (1 ..= *n).into_iter() {
+                            pos.y += y as isize;
+                            grid.insert(pos.clone(), Point::Filled(wire_id));
+                        }
+                    }
+                    Direction::Left(n) => {
+                        for x in (1 ..= *n).into_iter() {
+                            pos.x -= x as isize;
+                            grid.insert(pos.clone(), Point::Filled(wire_id));
+                        }
+                    }
+                    Direction::Right(n) => {
+                        for x in (1 ..= *n).into_iter() {
+                            pos.x += x as isize;
+                            grid.insert(pos.clone(), Point::Filled(wire_id));
+                        }
+                    }
+                }
+            }
+        }
+
+        self.grid = grid;
     }
 }
 
