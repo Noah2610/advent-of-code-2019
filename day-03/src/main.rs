@@ -11,7 +11,8 @@ type Id = char;
 
 mod grid_chars {
     pub const EMPTY: char = ' ';
-    pub const START: char = 'X';
+    pub const START: char = '#';
+    pub const INTERSECTION: char = 'X';
 }
 
 fn main() -> Result<(), String> {
@@ -26,7 +27,7 @@ fn main() -> Result<(), String> {
 
     circuit.gen_grid();
 
-    println!("{}", &circuit.grid);
+    println!("{}\n\n{:#?}", &circuit.grid, circuit.grid.intersections());
 
     Ok(())
 }
@@ -48,38 +49,38 @@ impl Circuit {
     }
 
     pub fn gen_grid(&mut self) {
-        let mut grid: Grid = Grid::default();
+        let mut grid = Grid::default();
 
         for (wire_id, wire) in self.wires.iter().enumerate() {
             let mut pos = Pos::default();
             let wire_id = wire_id.to_string().chars().next().unwrap();
 
-            grid.0.insert(pos.clone(), Point::Start);
+            grid.insert(pos.clone(), Point::Start);
 
             for direction in wire.0.iter() {
                 match direction {
                     Direction::Up(n) => {
                         for _ in (0 .. *n).into_iter() {
                             pos.y -= 1 as isize;
-                            grid.0.insert(pos.clone(), Point::Filled(wire_id));
+                            grid.add(pos.clone(), wire_id);
                         }
                     }
                     Direction::Down(n) => {
                         for _ in (0 .. *n).into_iter() {
                             pos.y += 1 as isize;
-                            grid.0.insert(pos.clone(), Point::Filled(wire_id));
+                            grid.add(pos.clone(), wire_id);
                         }
                     }
                     Direction::Left(n) => {
                         for _ in (0 .. *n).into_iter() {
                             pos.x -= 1 as isize;
-                            grid.0.insert(pos.clone(), Point::Filled(wire_id));
+                            grid.add(pos.clone(), wire_id);
                         }
                     }
                     Direction::Right(n) => {
                         for _ in (0 .. *n).into_iter() {
                             pos.x += 1 as isize;
-                            grid.0.insert(pos.clone(), Point::Filled(wire_id));
+                            grid.add(pos.clone(), wire_id);
                         }
                     }
                 }
@@ -91,14 +92,60 @@ impl Circuit {
 }
 
 #[derive(Default, Debug)]
-struct Grid(pub HashMap<Pos, Point>);
+struct Grid {
+    points:        HashMap<Pos, Point>,
+    intersections: Vec<Pos>,
+}
+
+impl Grid {
+    pub fn insert(&mut self, pos: Pos, point: Point) {
+        self.points.insert(pos, point);
+    }
+
+    pub fn get(&self, pos: &Pos) -> Option<&Point> {
+        self.points.get(pos)
+    }
+
+    pub fn add(&mut self, pos: Pos, id: Id) {
+        if let Some(existing_point) = self.points.get_mut(&pos) {
+            match existing_point {
+                Point::Empty => {
+                    *existing_point = Point::Filled(id);
+                }
+                Point::Start => {
+                    // Don't overwrite starting point, but also don't see it as an intersection.
+                    // Not sure if this is the correct behaviour.
+                }
+                Point::Filled(existing_id) => {
+                    if *existing_id != id {
+                        *existing_point =
+                            Point::Intersection(vec![*existing_id, id]);
+                        self.intersections.push(pos);
+                    }
+                }
+                Point::Intersection(existing_ids) => {
+                    if !existing_ids.contains(&id) {
+                        existing_ids.push(id);
+                        self.intersections.push(pos);
+                    }
+                }
+            }
+        } else {
+            self.insert(pos, Point::Filled(id));
+        }
+    }
+
+    pub fn intersections(&self) -> &Vec<Pos> {
+        &self.intersections
+    }
+}
 
 impl fmt::Display for Grid {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let mut y_bounds = (0, 0);
         let mut x_bounds = (0, 0);
 
-        for pos in self.0.keys() {
+        for pos in self.points.keys() {
             if pos.y < y_bounds.0 {
                 y_bounds.0 = pos.y;
             } else if pos.y > y_bounds.1 {
@@ -118,15 +165,12 @@ impl fmt::Display for Grid {
 
             for x in x_bounds.0 ..= x_bounds.1 {
                 let pos = Pos::new(x, y);
-                // let point = self.0.get(&pos).expect(&format!(
-                //     "Grid should have Point at Pos (x: {}, y: {})",
-                //     pos.x, pos.y
-                // ));
-                if let Some(point) = self.0.get(&pos) {
+                if let Some(point) = self.get(&pos) {
                     string.push(match point {
                         Point::Empty => grid_chars::EMPTY,
                         Point::Start => grid_chars::START,
                         Point::Filled(id) => *id,
+                        Point::Intersection(_) => grid_chars::INTERSECTION,
                     });
                 } else {
                     string.push(grid_chars::EMPTY);
@@ -152,11 +196,18 @@ impl Pos {
     }
 }
 
+impl fmt::Display for Pos {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        write!(f, "({}, {})", self.x, self.y)
+    }
+}
+
 #[derive(Debug)]
 enum Point {
     Empty,
     Start,
     Filled(Id),
+    Intersection(Vec<Id>),
 }
 
 #[derive(Debug)]
