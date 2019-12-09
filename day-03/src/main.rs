@@ -111,9 +111,11 @@ impl fmt::Display for Grid {
             }
         }
 
-        let mut string = String::new();
+        let mut lines = Vec::new();
 
         for y in y_bounds.0 ..= y_bounds.1 {
+            let mut string = String::new();
+
             for x in x_bounds.0 ..= x_bounds.1 {
                 let pos = Pos::new(x, y);
                 // let point = self.0.get(&pos).expect(&format!(
@@ -130,10 +132,11 @@ impl fmt::Display for Grid {
                     string.push(grid_chars::EMPTY);
                 }
             }
-            string.push('\n');
+
+            lines.push(string);
         }
 
-        write!(f, "{}", string)
+        write!(f, "{}", lines.join("\n"))
     }
 }
 
