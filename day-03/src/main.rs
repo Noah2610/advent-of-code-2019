@@ -20,7 +20,7 @@ fn main() -> Result<(), String> {
 
     circuit.gen_grid();
 
-    println!("{}\n\n", circuit.visualize_grid());
+    // println!("{}\n\n", circuit.visualize_grid());
 
     if let Some(dist) = circuit.closest_manhattan_dist() {
         println!("Closest Manhattan distance:\n{}", dist);

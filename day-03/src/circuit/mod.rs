@@ -11,7 +11,6 @@ use std::convert::TryInto;
 use wire::Wire;
 
 type Id = char;
-type IntersectionId = String;
 
 #[derive(Default, Debug)]
 pub struct Circuit {
@@ -52,7 +51,9 @@ impl Circuit {
             .min()
     }
 
-    pub fn least_steps_to_intersection(&self) -> Option<u32> {
+    pub fn least_steps_to_intersection(&self) -> Option<usize> {
+        let mut combined_least_steps = HashMap::<Pos, usize>::new();
+
         for (wire_id, _) in self.wires.iter().enumerate() {
             let wire_id = wire_id.to_string().chars().next().unwrap();
             let pos = Pos::default();
@@ -60,28 +61,52 @@ impl Circuit {
                 .steps_to_intersections_for_wire_at_pos(
                     wire_id,
                     pos,
-                    vec![pos],
+                    pos,
                     0,
+                    Vec::new(),
                 );
-            dbg!(&wire_id);
-            dbg!(&steps_to_each_intersection);
+
+            let mut intersections_least_steps = HashMap::<Pos, usize>::new();
+
+            steps_to_each_intersection.iter().for_each(|&(pos, steps)| {
+                let existing_steps =
+                    intersections_least_steps.entry(pos).or_insert(steps);
+                if steps < *existing_steps {
+                    *existing_steps = steps;
+                }
+            });
+
+            intersections_least_steps.iter().for_each(|(pos, steps)| {
+                let combined_steps =
+                    combined_least_steps.entry(*pos).or_insert(0);
+                *combined_steps += steps;
+            });
         }
 
-        None
+        let least_steps = combined_least_steps.iter().fold(
+            None,
+            |mut least_opt, (_, steps)| {
+                let least = least_opt.get_or_insert(*steps);
+                *least = (*least).min(*steps);
+                least_opt
+            },
+        );
+
+        least_steps
     }
 
-    fn steps_to_intersections_for_wire_at_pos(
+    fn steps_to_intersections_for_wire_at_pos<'a>(
         &self,
         wire_id: Id,
-        orig_pos: Pos,
-        mut checked_poss: Vec<Pos>,
+        mut pos: Pos,
+        mut prev_pos: Pos,
         orig_steps: usize,
-    ) -> Vec<(IntersectionId, usize)> {
-        let mut steps_to_intersections = Vec::<(IntersectionId, usize)>::new();
-        let mut pos = orig_pos;
+        mut checked_intersections: Vec<Pos>,
+    ) -> Vec<(Pos, usize)> {
+        let mut steps_to_intersections = Vec::<(Pos, usize)>::new();
 
-        // TODO
         let mut steps = orig_steps;
+        // let mut steps = 0;
 
         loop {
             steps += 1;
@@ -99,33 +124,26 @@ impl Circuit {
                     p
                 };
 
-                if !checked_poss.contains(&check_pos) {
+                if &check_pos != &prev_pos {
                     if let Some(point) = self.grid.point_at(&check_pos) {
                         match point {
                             Point::Start => {
-                                // TODO
-                                connecting_paths.push(check_pos);
+                                connecting_paths.push((check_pos, steps));
                             }
                             Point::Filled(filled_id)
                                 if filled_id == &wire_id =>
                             {
-                                // steps += 1;
-                                connecting_paths.push(check_pos);
-
-                                // steps_to_intersections.append(
-                                //     &mut self
-                                //         .steps_to_intersections_for_wire_at_pos(
-                                //             wire_id, check_pos, pos,
-                                //         ),
-                                // );
+                                connecting_paths.push((check_pos, steps));
                             }
                             Point::Intersection(intersections) => {
-                                // steps += 1;
-                                connecting_paths.push(check_pos);
-                                let intersection_id =
-                                    id_for_intersection(&intersections);
-                                steps_to_intersections
-                                    .push((intersection_id, steps));
+                                if !checked_intersections.contains(&check_pos) {
+                                    if intersections.contains(&wire_id) {
+                                        connecting_paths
+                                            .push((check_pos, steps));
+                                        steps_to_intersections
+                                            .push((check_pos, steps));
+                                    }
+                                }
                             }
                             _ => (),
                         }
@@ -133,21 +151,28 @@ impl Circuit {
                 }
             }
 
+            prev_pos = pos;
+
             match connecting_paths.len() {
                 0 => return steps_to_intersections,
                 1 => {
-                    checked_poss.push(pos);
-                    // prev_pos = pos;
-                    pos = connecting_paths.first().unwrap().clone();
+                    let connecting_path = connecting_paths.first().unwrap();
+                    pos = connecting_path.0;
+                    steps = connecting_path.1;
                 }
                 n if n > 1 => {
+                    checked_intersections = steps_to_intersections
+                        .iter()
+                        .map(|(id, _)| id.clone())
+                        .collect();
                     for connecting_path in connecting_paths {
                         steps_to_intersections.append(
                             &mut self.steps_to_intersections_for_wire_at_pos(
                                 wire_id,
-                                connecting_path,
-                                checked_poss.clone(),
-                                steps,
+                                connecting_path.0,
+                                prev_pos,
+                                connecting_path.1,
+                                checked_intersections.clone(),
                             ),
                         );
                     }
@@ -157,10 +182,6 @@ impl Circuit {
             }
         }
     }
-}
-
-fn id_for_intersection(intersections: &Vec<Id>) -> IntersectionId {
-    intersections.iter().collect::<String>()
 }
 
 #[derive(Debug)]
