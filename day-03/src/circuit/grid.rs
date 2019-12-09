@@ -45,7 +45,7 @@ impl Grid {
         }
     }
 
-    pub fn get(&self, pos: &Pos) -> Option<&Point> {
+    pub fn point_at(&self, pos: &Pos) -> Option<&Point> {
         self.points.get(pos)
     }
 
@@ -109,7 +109,7 @@ impl fmt::Display for Grid {
 
             for x in x_bounds.0 ..= x_bounds.1 {
                 let pos = Pos::new(x, y);
-                if let Some(point) = self.get(&pos) {
+                if let Some(point) = self.point_at(&pos) {
                     string.push(match point {
                         Point::Start => grid_chars::START,
                         Point::Filled(id) => *id,

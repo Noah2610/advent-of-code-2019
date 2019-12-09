@@ -1,1 +1,1 @@
-input_puzzle.txt
+input_example.txt
