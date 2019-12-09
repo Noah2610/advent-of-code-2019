@@ -8,59 +8,59 @@ type Num = usize;
 fn main() {
     let input = util::get_input();
 
-    let orig_opcodes = input
+    let mut opcodes = input
         .split(",")
         .filter_map(|x| x.trim().parse::<Num>().ok())
         .collect::<Vec<Num>>();
 
     // noun = 39
-    // verb = 52
-    // opcodes.get_mut(10).map(|x| *x = 39);
-    // opcodes.get_mut(11).map(|x| *x = 52);
+    // verb = 51
+    opcodes.get_mut(10).map(|x| *x = 39);
+    opcodes.get_mut(11).map(|x| *x = 51);
 
-    // let program = Program::from(opcodes);
-    // println!("{}", program.run().unwrap());
+    let program = Program::from(opcodes);
+    println!("{}", program.run().unwrap());
 
     // Find inputs that will result in the value:
     //     19690720
 
-    const INPUT_ONE_POS: Num = 1;
-    const INPUT_TWO_POS: Num = 2;
-    const INPUT_MAX: usize = 99;
-    const TARGET_RESULT: usize = 19690720;
-    let mut result = 0;
-    let mut input_one = 0;
-    let mut input_two = 0;
+    // const INPUT_ONE_POS: Num = 1;
+    // const INPUT_TWO_POS: Num = 2;
+    // const INPUT_MAX: usize = 99;
+    // const TARGET_RESULT: usize = 19690720;
+    // let mut result = 0;
+    // let mut input_one = 0;
+    // let mut input_two = 0;
 
-    while result != TARGET_RESULT {
-        let mut opcodes = orig_opcodes.clone();
+    // while result != TARGET_RESULT {
+    //     let mut opcodes = orig_opcodes.clone();
 
-        opcodes.get_mut(INPUT_ONE_POS).map(|x| *x = input_one);
-        opcodes.get_mut(INPUT_TWO_POS).map(|x| *x = input_two);
+    //     opcodes.get_mut(INPUT_ONE_POS).map(|x| *x = input_one);
+    //     opcodes.get_mut(INPUT_TWO_POS).map(|x| *x = input_two);
 
-        let program = Program::from(opcodes);
+    //     let program = Program::from(opcodes);
 
-        result = program.run().unwrap();
+    //     result = program.run().unwrap();
 
-        // Increment inputs
-        if result != TARGET_RESULT {
-            if input_two < INPUT_MAX {
-                input_two += 1;
-            } else {
-                if input_one < INPUT_MAX {
-                    input_one += 1;
-                    input_two = 0;
-                } else {
-                    panic!("No result found :(");
-                }
-            }
-        }
-    }
+    //     // Increment inputs
+    //     if result != TARGET_RESULT {
+    //         if input_two < INPUT_MAX {
+    //             input_two += 1;
+    //         } else {
+    //             if input_one < INPUT_MAX {
+    //                 input_one += 1;
+    //                 input_two = 0;
+    //             } else {
+    //                 panic!("No result found :(");
+    //             }
+    //         }
+    //     }
+    // }
 
-    println!(
-        "noun = {}\nverb = {}\nresult = {}",
-        input_one, input_two, result
-    );
+    // println!(
+    //     "noun = {}\nverb = {}\nresult = {}",
+    //     input_one, input_two, result
+    // );
 }
 
 #[derive(Debug)]
