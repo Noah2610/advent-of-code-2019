@@ -27,7 +27,11 @@ fn main() -> Result<(), String> {
 
     circuit.gen_grid();
 
-    println!("{}\n\n{:#?}", &circuit.grid, circuit.grid.intersections());
+    if let Some(dist) = circuit.grid.closest_manhattan_dist() {
+        println!("Closest Manhattan Distance:\n{}", dist);
+    } else {
+        println!("No intersections found!");
+    }
 
     Ok(())
 }
@@ -135,8 +139,11 @@ impl Grid {
         }
     }
 
-    pub fn intersections(&self) -> &Vec<Pos> {
-        &self.intersections
+    pub fn closest_manhattan_dist(&self) -> Option<u32> {
+        self.intersections
+            .iter()
+            .map(Pos::calc_manhattan_dist)
+            .min()
     }
 }
 
@@ -193,6 +200,10 @@ struct Pos {
 impl Pos {
     pub fn new(x: isize, y: isize) -> Self {
         Self { x, y }
+    }
+
+    pub fn calc_manhattan_dist(&self) -> u32 {
+        self.x.abs() as u32 + self.y.abs() as u32
     }
 }
 
