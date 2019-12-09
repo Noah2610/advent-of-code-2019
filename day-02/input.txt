@@ -1,1 +1,1 @@
-input_100_times_noun_times_verb.txt
+input_orig.txt
