@@ -63,7 +63,7 @@ impl Circuit {
                     pos,
                     pos,
                     0,
-                    Vec::new(),
+                    &mut Vec::new(),
                 );
 
             let mut intersections_least_steps = HashMap::<Pos, usize>::new();
@@ -81,6 +81,8 @@ impl Circuit {
                     combined_least_steps.entry(*pos).or_insert(0);
                 *combined_steps += steps;
             });
+
+            dbg!(&intersections_least_steps);
         }
 
         let least_steps = combined_least_steps.iter().fold(
@@ -101,7 +103,7 @@ impl Circuit {
         mut pos: Pos,
         mut prev_pos: Pos,
         orig_steps: usize,
-        mut checked_intersections: Vec<Pos>,
+        checked_intersections: &'a mut Vec<Pos>,
     ) -> Vec<(Pos, usize)> {
         let mut steps_to_intersections = Vec::<(Pos, usize)>::new();
 
@@ -111,6 +113,7 @@ impl Circuit {
             steps += 1;
 
             let mut connecting_paths = Vec::new();
+            let mut newly_checked_intersections = Vec::new();
 
             for check_side in
                 [Side::Up, Side::Down, Side::Left, Side::Right].iter()
@@ -137,10 +140,12 @@ impl Circuit {
                             Point::Intersection(intersections) => {
                                 if !checked_intersections.contains(&check_pos) {
                                     if intersections.contains(&wire_id) {
-                                        connecting_paths
-                                            .push((check_pos, steps));
+                                        // connecting_paths
+                                        //     .push((check_pos, steps));
                                         steps_to_intersections
                                             .push((check_pos, steps));
+                                        newly_checked_intersections
+                                            .push(check_pos);
                                     }
                                 }
                             }
@@ -151,6 +156,7 @@ impl Circuit {
             }
 
             prev_pos = pos;
+            checked_intersections.append(&mut newly_checked_intersections);
 
             match connecting_paths.len() {
                 0 => return steps_to_intersections,
@@ -160,10 +166,6 @@ impl Circuit {
                     steps = connecting_path.1;
                 }
                 n if n > 1 => {
-                    checked_intersections = steps_to_intersections
-                        .iter()
-                        .map(|(id, _)| id.clone())
-                        .collect();
                     for connecting_path in connecting_paths {
                         steps_to_intersections.append(
                             &mut self.steps_to_intersections_for_wire_at_pos(
@@ -171,7 +173,7 @@ impl Circuit {
                                 connecting_path.0,
                                 prev_pos,
                                 connecting_path.1,
-                                checked_intersections.clone(),
+                                checked_intersections,
                             ),
                         );
                     }
